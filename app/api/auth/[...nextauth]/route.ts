@@ -57,7 +57,7 @@ const handler = NextAuth({
               <body>
                 <div class="container">
                   <div class="header">
-                    <h1>Welcome to Job Portal</h1>
+                    <h1>Welcome back to Job Portal</h1>
                   </div>
                   <div class="content">
                     <p>Hello,</p>
