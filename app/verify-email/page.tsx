@@ -1,80 +1,58 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import { MailCheck, AlertCircle } from "lucide-react"
 
 export default function VerifyEmailPage() {
-  const [otp, setOtp] = useState(["", "", "", "", "", ""])
-  const [isVerifying, setIsVerifying] = useState(false)
-
-  const handleChange = (index: number, value: string) => {
-    if (value.length > 1) return
-
-    const newOtp = [...otp]
-    newOtp[index] = value
-    setOtp(newOtp)
-
-    // Auto-focus next input
-    if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-${index + 1}`)
-      if (nextInput) nextInput.focus()
-    }
-  }
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsVerifying(true)
-
-    // Simulate verification
-    setTimeout(() => {
-      setIsVerifying(false)
-      window.location.href = "/profile/education"
-    }, 1500)
-  }
-
-  const handleResend = () => {
-    // Simulate resend
-    alert("Verification code resent to your email")
-  }
+  const searchParams = useSearchParams()
+  const email = searchParams.get("email") || ""
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-50 to-white p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Verify your email</CardTitle>
-          <CardDescription className="text-center">We&apos;ve sent a verification code to your email</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="flex justify-center gap-2">
-              {otp.map((digit, index) => (
-                <Input
-                  key={index}
-                  id={`otp-${index}`}
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={1}
-                  className="h-12 w-12 text-center text-lg"
-                  value={digit}
-                  onChange={(e) => handleChange(index, e.target.value)}
-                  required
-                />
-              ))}
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex justify-center mb-4">
+            <div className="rounded-full bg-green-100 p-3">
+              <MailCheck className="h-8 w-8 text-green-600" />
             </div>
-            <Button type="submit" className="w-full" disabled={isVerifying}>
-              {isVerifying ? "Verifying..." : "Verify Email"}
-            </Button>
-          </form>
+          </div>
+          <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
+          <CardDescription>
+            A sign-in link has been sent to<br />
+            <strong className="text-gray-700">{email || "your email"}</strong>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex gap-3">
+              <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-blue-700">
+                <p className="font-medium mb-1">Instructions:</p>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>Check your email inbox</li>
+                  <li>Click the sign-in link</li>
+                  <li>You'll be redirected to your dashboard</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-sm text-gray-600 text-center">
+            <p>The link expires in 24 hours.</p>
+          </div>
         </CardContent>
-        <CardFooter className="flex flex-col items-center gap-2">
-          <p className="text-sm text-gray-500">Didn&apos;t receive a code?</p>
-          <Button variant="link" onClick={handleResend}>
-            Resend Code
+        <CardFooter className="flex flex-col gap-3">
+          <p className="text-sm text-gray-500 text-center">
+            Didn&apos;t receive the email? Check your spam folder or{" "}
+            <Link href="/signin" className="text-blue-600 hover:underline font-medium">
+              try again
+            </Link>
+          </p>
+          <Button asChild variant="outline" className="w-full">
+            <Link href="/signin">Back to Sign In</Link>
           </Button>
         </CardFooter>
       </Card>

@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
+import { signIn } from "next-auth/react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,16 +14,42 @@ import { FaGoogle, FaLinkedin } from "react-icons/fa"
 
 export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false)
+  const [email, setEmail] = useState("")
+  const [error, setError] = useState("")
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
+    setError("")
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const result = await signIn("email", {
+        email,
+        redirect: false,
+        callbackUrl: "/dashboard",
+      })
+
+      if (result?.error) {
+        setError("Failed to send verification email. Please try again.")
+      } else if (result?.ok) {
+        // Email sent successfully
+        window.location.href = `/verify-email?email=${encodeURIComponent(email)}`
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.")
+    } finally {
       setIsLoading(false)
-      window.location.href = "/dashboard"
-    }, 1500)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true)
+    try {
+      await signIn("google", { callbackUrl: "/dashboard" })
+    } catch (err) {
+      setError("Failed to sign in with Google")
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -30,25 +57,30 @@ export default function SignInPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Sign in</CardTitle>
-          <CardDescription className="text-center">Enter your credentials to access your account</CardDescription>
+          <CardDescription className="text-center">Enter your email to get a sign in link</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
+              {error}
+            </div>
+          )}
+          
+          <form onSubmit={handleEmailSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="john@example.com" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required />
-              <div className="text-right text-sm">
-                <Link href="/forgot-password" className="text-blue-600 hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
+              <Input
+                id="email"
+                type="email"
+                placeholder="john@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+              />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign in"}
+              {isLoading ? "Sending link..." : "Send sign in link"}
             </Button>
           </form>
 
@@ -59,11 +91,16 @@ export default function SignInPage() {
           </div>
 
           <div className="mt-4 flex gap-2">
-            <Button variant="outline" className="flex-1">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+            >
               <FaGoogle className="mr-2" />
               Google
             </Button>
-            <Button variant="outline" className="flex-1">
+            <Button variant="outline" className="flex-1" disabled>
               <FaLinkedin className="mr-2" />
               LinkedIn
             </Button>
